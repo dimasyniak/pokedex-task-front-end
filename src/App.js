@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from "react";
 import "antd/dist/antd.css";
-import { Layout, Table } from "antd";
+import {
+  Layout,
+  Table,
+  Pagination,
+  Skeleton,
+  Switch,
+  Card,
+  Icon,
+  Avatar,
+  Col,
+  Row
+} from "antd";
 import axios from "axios";
+
+import CardContainer from "./Components/CardContainer/CardContainer";
+
 const { Header, Content } = Layout;
 
 function App() {
   const [pokemons, setPokemons] = useState([]);
   const [pokemonsData, setPokemonsData] = useState([]);
 
-  useEffect(() => {
-    axios.get("https://pokeapi.co/api/v2/pokemon/?&limit=809").then(res => {
-      setPokemons(res.data.results);
-    });
-  }, []);
+  const [data, setData] = useState([]);
+  const [pagination, setPagination] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {}, []);
 
   const columns = [
     {
@@ -124,6 +138,21 @@ function App() {
         console.log(error);
       });
   };
+
+  const testTest = () => {
+    axios
+      .post("http://localhost:3000/test", {
+        id: "50",
+        offset: "50"
+      })
+      .then(function(response) {
+        console.log(response.data);
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+  };
+
   /*function gelAllData(status) {
     console.log(status);
     let data;
@@ -160,17 +189,46 @@ function App() {
     });
   }*/
 
-  const test = () => {
-    pokemons.map(item => {
-      gelAllData(item.name);
-    });
+  const fetch = (params = {}) => {
+    console.log("params:", params);
+    setLoading(true);
+    axios
+      .post("http://localhost:3000/test", {
+        id: params.page * 20,
+        offset: "50"
+      })
+      .then(data => {
+        //const pagination = { ...pagination };
+        // Read total count from server
+        // pagination.total = data.totalCount;
+        setPagination({ total: 200 });
+        setLoading(false);
+        setData(data.data);
+        console.log(data.data);
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
   };
-  let data;
-  let loading = true;
-  if (pokemonsData.length === pokemons.length) {
-    data = pokemonsData;
-    loading = false;
-  }
+
+  const onChange = page => {
+    console.log(page);
+  };
+
+  const handleTableChange = (pagination, filters, sorter) => {
+    /*const pager = { ...pagination };
+    pager.current = pagination.current;
+    setPagination({ pagination: pager });
+    fetch({
+      results: pagination.pageSize,
+      page: pagination.current,
+      sortField: sorter.field,
+      sortOrder: sorter.order,
+      ...filters
+    });*/
+    console.log(pagination.current);
+  };
+  const { Meta } = Card;
   return (
     <div>
       <Layout>
@@ -182,14 +240,86 @@ function App() {
           Pokedex
         </Header>
         <Content style={{ padding: "20px 50px" }}>
-          <button onClick={() => gelAllData("bulbasaur")}>Go</button>
-          <button onClick={test}>Test</button>
-          <Table
-            loading={loading}
-            columns={columns}
-            dataSource={data}
-            pagination={{ pageSize: 20 }}
-          />
+          <button onClick={() => setLoading(!loading)}>Test2</button>
+          <CardContainer>
+            <div>
+              <Card loading={loading}>
+                <Meta
+                  avatar={
+                    <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                  }
+                  title="Card title"
+                  description="This is the description"
+                />
+              </Card>
+            </div>
+
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+            <Card loading={loading}>
+              <Meta
+                avatar={
+                  <Avatar src="https://img.pokemondb.net/sprites/sun-moon/icon/bulbasaur.png" />
+                }
+                title="Card title"
+                description="This is the description"
+              />
+            </Card>
+          </CardContainer>
+
+          <Pagination defaultCurrent={1} total={50} onChange={onChange} />
         </Content>
       </Layout>
     </div>
