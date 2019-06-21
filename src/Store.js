@@ -5,8 +5,8 @@ class Store {
   @observable pokemons = null;
 
   getPokemons = () => {
-    axios.get("https://pokeapi.co/api/v2/pokemon/?&limit=809").then(res => {
-      this.pokemons = res.data.results;
+    axios.get("http://localhost:3000/test").then(res => {
+      this.pokemons = res.data;
     });
   };
 }
