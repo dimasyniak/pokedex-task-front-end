@@ -128,6 +128,7 @@ function App() {
         setLoading(false);
       })
       .catch(function(error) {
+        setTotal(808);
         console.log(error);
         setLoading(false);
       });
@@ -174,6 +175,7 @@ function App() {
     } else {
       setSearchByType(false);
       setReload(true);
+      setTotal(808);
     }
   };
 
