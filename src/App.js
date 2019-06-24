@@ -5,17 +5,18 @@ import {
   Pagination,
   Card,
   Icon,
-  Avatar,
   Menu,
   Dropdown,
-  Progress,
-  Tag,
   Spin,
-  Select
+  Select,
+  Input,
+  Drawer,
+  Empty
 } from "antd";
 import axios from "axios";
 
 import CardContainer from "./Components/CardContainer/CardContainer";
+import PokemonCard from "./Components/PokemonCard/PokemonCard";
 
 const { Header, Content } = Layout;
 
@@ -24,35 +25,19 @@ function App() {
   const [elements, setElements] = useState(10);
   const [pagination, setPagination] = useState(1);
   const [reload, setReload] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [searchByType, setSearchByType] = useState(false);
+  const [total, setTotal] = useState(808);
+  const [searchByTypeConfirm, setSearchByTypeConfirm] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [searchCard, setSeacrhCard] = useState(Empty);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
+    setReload(true);
     paginationHandler();
   }, []);
-
-  let colors = {
-    normal: "#A8A878",
-    fire: "#F08030",
-    water: "#6890F0",
-    grass: "#78C850",
-    electric: "#F8D030",
-    ice: "#98D8D8",
-    fighting: "#C03028",
-    poison: "#A040A0",
-    ground: "#E0C068",
-    flying: "#A890F0",
-    psychic: "#F85888",
-    bug: "#A8B820",
-    rock: "#B8A038",
-    ghost: "#705898",
-    dark: "#705848",
-    dragon: "#7038F8",
-    steel: "#B8B8D0",
-    fairy: "#F0B6BC"
-  };
-
-  const getTypeColor = name => colors[name];
 
   const paginationHandler = () => {
     let offset;
@@ -69,138 +54,144 @@ function App() {
       .then(function(response) {
         setPokemons([...response.data]);
         setReload(false);
+        setLoading(false);
       })
       .catch(function(error) {
         setReload(false);
+        setLoading(false);
       });
   };
 
-  const onChange = page => {
+  const allPokeHandler = page => {
     setPagination(page);
     setReload(true);
+    setLoading(true);
+  };
+
+  const setSearchByTypeHandler = page => {
+    setPagination(page);
+    setSearchByType(true);
+    setSearchByTypeConfirm(true);
+    setLoading(true);
   };
 
   const { Meta } = Card;
 
-  const onClick = ({ key }) => {
+  const onClickPage = ({ key }) => {
     setElements(key);
     setReload(true);
+    setLoading(true);
   };
 
-  const menu = (
-    <Menu onClick={onClick}>
-      <Menu.Item key="10">10 on page</Menu.Item>
-      <Menu.Item key="20">20 on page</Menu.Item>
-      <Menu.Item key="50">50 on page</Menu.Item>
-    </Menu>
-  );
+  const onClickPageSearchByType = ({ key }) => {
+    setElements(key);
+    setSearchByType(true);
+    setSearchByTypeConfirm(true);
+    setLoading(true);
+  };
 
   let cards = [];
+  if (pokemons.length > 0) {
+    pokemons.map(item => {
+      cards.push(
+        <PokemonCard
+          name={item.name}
+          types={item.types}
+          stats={item.stats}
+          hp={item.stats[5].base_stat}
+          attack={item.stats[4].base_stat}
+          defense={item.stats[3].base_stat}
+          spAttack={item.stats[2].base_stat}
+          spDefense={item.stats[1].base_stat}
+          speed={item.stats[0].base_stat}
+        />
+      );
+    });
+  }
+
+  const searchByTypeHandler = () => {
+    setSearchByTypeConfirm(false);
+    let offset;
+    if (pagination === 1) {
+      offset = 0;
+    } else {
+      offset = (pagination - 1) * elements;
+    }
+    let limit = elements;
+
+    let types = { types: selectedItems, limit: limit, offset: offset };
+    axios
+      .post("http://localhost:3000/types", types)
+      .then(function(response) {
+        setPokemons(response.data.pokemons);
+        setTotal(response.data.count);
+        setLoading(false);
+      })
+      .catch(function(error) {
+        console.log(error);
+        setLoading(false);
+      });
+  };
+
+  const searchByNameHandler = name => {
+    setSearchLoading(true);
+    axios
+      .post("http://localhost:3000/name", {
+        name: name
+      })
+      .then(function(response) {
+        setSearchLoading(false);
+        if (response.data !== false) {
+          setSeacrhCard(
+            <PokemonCard
+              name={response.data.name}
+              types={response.data.types}
+              stats={response.data.stats}
+              hp={response.data.stats[5].base_stat}
+              attack={response.data.stats[4].base_stat}
+              defense={response.data.stats[3].base_stat}
+              spAttack={response.data.stats[2].base_stat}
+              spDefense={response.data.stats[1].base_stat}
+              speed={response.data.stats[0].base_stat}
+            />
+          );
+        } else {
+          setSeacrhCard(Empty);
+        }
+        setVisible(true);
+      })
+      .catch(function(error) {
+        setSearchLoading(false);
+        console.log(error);
+      });
+  };
+
+  const handleChange = selectedItemsIn => {
+    setSelectedItems(selectedItemsIn);
+    if (selectedItemsIn.length > 0) {
+      setSearchByType(true);
+      setSearchByTypeConfirm(true);
+    } else {
+      setSearchByType(false);
+      setReload(true);
+    }
+  };
 
   if (reload) {
     paginationHandler();
   }
 
-  if (pokemons.length > 0) {
-    pokemons.map(item => {
-      let total = 0;
-      item.stats.map(statItem => {
-        total += statItem.base_stat;
-      });
-      let types = [];
-      item.types.map(typeItem => {
-        let color;
-        color = getTypeColor(typeItem.type.name);
-        types.push(
-          <Tag key={item.name + typeItem.type.name} color={color}>
-            {typeItem.type.name.toUpperCase()}
-          </Tag>
-        );
-      });
-      let description = (
-        <div>
-          <span>HP</span>
-          <Progress
-            percent={(item.stats[5].base_stat * 100) / 255}
-            showInfo={false}
-          />
-          <span>Speed</span>
-          <Progress
-            percent={(item.stats[0].base_stat * 100) / 180}
-            showInfo={false}
-          />
-          <span>Defense</span>
-          <Progress
-            percent={(item.stats[3].base_stat * 100) / 230}
-            showInfo={false}
-          />
-          <span>Attack</span>
-          <Progress
-            percent={(item.stats[4].base_stat * 100) / 190}
-            showInfo={false}
-          />
-          <span>Sp. Defense</span>
-          <Progress
-            percent={(item.stats[1].base_stat * 100) / 230}
-            showInfo={false}
-          />
-          <span>Sp. Attack</span>
-          <Progress
-            percent={(item.stats[2].base_stat * 100) / 194}
-            showInfo={false}
-          />
-          <span>Total</span>
-          <Progress percent={(total * 100) / 780} showInfo={false} />
-          {types}
-        </div>
-      );
-      cards.push(
-        <Card key={item.name} loading={loading}>
-          <Meta
-            avatar={
-              <Avatar
-                src={
-                  "https://img.pokemondb.net/sprites/sun-moon/icon/" +
-                  item.name +
-                  ".png"
-                }
-              />
-            }
-            title={item.name.toUpperCase()}
-            description={description}
-          />
-        </Card>
-      );
-    });
+  if (searchByType && searchByTypeConfirm) {
+    searchByTypeHandler();
+    setLoading(true);
   }
 
-  const test = () => {
-    let offset;
-    if (pagination === 1) {
-      offset = 0;
-    } else {
-      offset = pagination * elements + 1;
-    }
-    let limit = elements;
+  const onClose = () => {
+    setVisible(false);
+    setSeacrhCard(Empty);
+  };
 
-    let types = { types: selectedItems, limit: limit, offset: offset };
-    console.log(types);
-    axios
-      .post("http://localhost:3000/types", types)
-      .then(function(response) {
-        console.log(response.data);
-        //setPokemons([...response.data]);
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-  };
-  const handleChange = selectedItems => {
-    setSelectedItems([...selectedItems]);
-    console.log(selectedItems);
-    test();
-  };
-  const OPTIONS = [
+  const options = [
     "normal",
     "fire",
     "water",
@@ -221,7 +212,16 @@ function App() {
     "fairy"
   ];
   const selectedItemsS = selectedItems;
-  const filteredOptions = OPTIONS.filter(o => !selectedItems.includes(o));
+  const filteredOptions = options.filter(o => !selectedItems.includes(o));
+  const { Search } = Input;
+
+  const menu = (
+    <Menu onClick={searchByType ? onClickPageSearchByType : onClickPage}>
+      <Menu.Item key="10">10 on page</Menu.Item>
+      <Menu.Item key="20">20 on page</Menu.Item>
+      <Menu.Item key="50">50 on page</Menu.Item>
+    </Menu>
+  );
 
   return (
     <div>
@@ -234,12 +234,20 @@ function App() {
           Pokedex
         </Header>
         <Content style={{ padding: "20px 50px" }}>
+          <Spin spinning={searchLoading} delay={500}>
+            <Search
+              placeholder="Input full Pokemon name"
+              onSearch={value => searchByNameHandler(value)}
+              enterButton
+              style={{ width: "100%", marginBottom: "10px" }}
+            />
+          </Spin>
           <Select
             mode="multiple"
-            placeholder="Inserted are removed"
+            placeholder="Select type"
             value={selectedItemsS}
             onChange={handleChange}
-            style={{ width: "100%" }}
+            style={{ width: "100%", marginBottom: "10px" }}
           >
             {filteredOptions.map(item => (
               <Select.Option key={item} value={item}>
@@ -247,20 +255,30 @@ function App() {
               </Select.Option>
             ))}
           </Select>
-          <button onClick={test}>Test</button>
           <Pagination
             defaultCurrent={1}
-            total={(808 / elements) * 10}
-            onChange={onChange}
+            total={(total / elements) * 10}
+            onChange={searchByType ? setSearchByTypeHandler : allPokeHandler}
+            style={{ marginBottom: "10px" }}
           />
           <Dropdown overlay={menu}>
             <a className="ant-dropdown-link" href="#">
               {elements} on page <Icon type="down" />
             </a>
           </Dropdown>
-          <Spin spinning={reload}>
+          <Spin spinning={loading}>
             <CardContainer>{cards}</CardContainer>
           </Spin>
+          <Drawer
+            title="Pokemon Information"
+            placement="right"
+            width="375"
+            closable={true}
+            onClose={onClose}
+            visible={visible}
+          >
+            {searchCard}
+          </Drawer>
         </Content>
       </Layout>
     </div>
