@@ -47,7 +47,7 @@ function App() {
       offset = (pagination - 1) * elements + 1;
     }
     axios
-      .post("http://localhost:3000/all", {
+      .post("https://pokedex-serv.herokuapp.com/all", {
         limit: elements - 1,
         offset: offset
       })
@@ -121,7 +121,7 @@ function App() {
 
     let types = { types: selectedItems, limit: limit, offset: offset };
     axios
-      .post("http://localhost:3000/types", types)
+      .post("https://pokedex-serv.herokuapp.com/types", types)
       .then(function(response) {
         setPokemons(response.data.pokemons);
         setTotal(response.data.count);
@@ -136,7 +136,7 @@ function App() {
   const searchByNameHandler = name => {
     setSearchLoading(true);
     axios
-      .post("http://localhost:3000/name", {
+      .post("https://pokedex-serv.herokuapp.com/name", {
         name: name
       })
       .then(function(response) {
